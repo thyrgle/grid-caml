@@ -1,0 +1,6 @@
+(library
+ (wrapped false)
+ (public_name grid-caml)
+ (name grid_caml)
+ (modules Grid)
+)

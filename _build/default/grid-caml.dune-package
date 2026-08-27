@@ -1,0 +1,30 @@
+(lang dune 3.24)
+(name grid-caml)
+(sections (lib .) (libexec .))
+(files
+ (lib
+  (META
+   dune-package
+   grid.cmi
+   grid.cmt
+   grid.cmti
+   grid.cmx
+   grid.ml
+   grid.mli
+   grid_caml.a
+   grid_caml.cma
+   grid_caml.cmxa
+   opam))
+ (libexec (grid_caml.cmxs)))
+(library
+ (name grid-caml)
+ (kind normal)
+ (archives (byte grid_caml.cma) (native grid_caml.cmxa))
+ (plugins (byte grid_caml.cma) (native grid_caml.cmxs))
+ (native_archives grid_caml.a)
+ (modes byte native)
+ (modules
+  (singleton
+   (obj_name grid)
+   (visibility public)
+   (source (path Grid) (intf (path grid.mli)) (impl (path grid.ml))))))
