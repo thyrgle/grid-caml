@@ -1,22 +1,42 @@
-type grid =
+type cell =
 {
   x: float;
   y: float;
   w: float;
   h: float;
-  children: grid array array;
-  mutable transforms: (grid -> grid) list;
-  mutable children_transforms: (grid -> grid) list;
 }
 
-let make_cell (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
+let zero_cell =
 {
-  x=x; y=y; 
-  w=w; h=h;
+  x=0.0;
+  y=0.0;
+  w=0.0;
+  h=0.0;
+}
+
+type grid =
+{
+  children: grid array array;
+  parent: grid option;
+  mutable transforms: (cell -> cell) list;
+  mutable children_transforms: (cell -> cell) list;
+}
+
+let empty_grid =
+{
+  parent = None;
   children = [|[||]|];
   transforms=[];
   children_transforms=[];
 }
+
+let set_x (new_x: float) = (fun c -> { c with x=new_x })
+let set_y (new_y: float) = (fun c -> { c with y=new_y })
+let set_w (new_w: float) = (fun c -> { c with w=new_w })
+let set_h (new_h: float) = (fun c -> { c with h=new_h })
+
+let make_cell (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
+  { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; }
 
 let ( *$ ) (a: float) (b: int) = a *. Int.to_float b
 let ( $* ) (a: int) (b: float) = Int.to_float a *. b
@@ -35,8 +55,7 @@ let make_grid x y w h (row_weights: float array) (col_weights: float array): gri
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c))
       (w *. row_weights.(r)) (h *. col_weights.(c))) in
     {
-      x=x; y=y;
-      w=w; h=h;
+      parent=None;
       children=children;
       transforms=[];
       children_transforms=[];
@@ -54,10 +73,9 @@ let uni_with_cell_dim
   let children = Array.init_matrix row_ct col_ct (fun r c ->
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c)) cw ch) in
   {
-    x=x; y=y;
-    w=w; h=h;
+    parent=None;
     children=children;
-    transforms=[];
+    transforms=[set_x x; set_y y; set_w w; set_h h];
     children_transforms=[];
   }
 
@@ -78,10 +96,9 @@ let uni_with_size
   let children = Array.init_matrix row_ct col_ct (fun x y ->
     make_cell (fst cell_coord.(x).(y)) (snd cell_coord.(x).(y)) cw ch) in
   {
-    x=x; y=y;
-    w=w; h=h;
+    parent=None;
     children=children;
-    transforms=[];
+    transforms=[set_x x; set_y y; set_w w; set_h h];
     children_transforms=[];
   }
 
@@ -101,17 +118,17 @@ let compose (funs: ('a -> 'a) list): ('a -> 'a) =
 let int_coords (g: grid) =
   let f = compose g.transforms in
   let i = Int.of_float in
-  let fg = f g in
+  let fg = f zero_cell in
   (i fg.x, i fg.y, i fg.w, i fg.h)
 
 let coords (g: grid) = 
   let f = compose g.transforms in
-  let fg = f g in
+  let fg = f zero_cell in
   (fg.x, fg.y, fg.w, fg.h)
 
-let apply_transform (transform: grid -> grid) (g: grid) = g.transforms <- transform :: g.transforms
+let apply_transform (transform: cell -> cell) (g: grid) = g.transforms <- transform :: g.transforms
 let (+>) = apply_transform
 
-let apply_children_transform (transform: grid -> grid) (g: grid) = 
+let apply_children_transform (transform: cell -> cell) (g: grid) = 
   g.children_transforms <- transform :: g.children_transforms
 let (++>) = apply_children_transform
