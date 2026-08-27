@@ -1,6 +1,0 @@
-description = ""
-requires = ""
-archive(byte) = "grid_caml.cma"
-archive(native) = "grid_caml.cmxa"
-plugin(byte) = "grid_caml.cma"
-plugin(native) = "grid_caml.cmxs"
