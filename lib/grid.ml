@@ -103,10 +103,7 @@ let reg_sqr_with_cell_dim x y cw rc_ct = uni_sqr_with_cell_dim x y cw rc_ct rc_c
 
 let ( /$ ) (a: float) (b: int) = a /. Int.to_float b
 
-let uni_with_size
-  (x: float) (y: float)
-  (w: float) (h: float)
-  (row_ct: int) (col_ct: int): grid =
+let uni_with_size x y w h row_ct col_ct: grid =
   let cw = w /$ col_ct in
   let ch = h /$ row_ct in
   let cell_coord =
@@ -114,12 +111,10 @@ let uni_with_size
     (fun x y -> (x $* cw, y $* ch)) in
   let children = Array.init_matrix row_ct col_ct (fun x y ->
     make_cell (fst cell_coord.(x).(y)) (snd cell_coord.(x).(y)) cw ch) in
-  {
-    parent=None;
-    children=children;
-    transforms=[set_x x; set_y y; set_w w; set_h h];
-    children_transforms=[];
-  }
+  let container_grid = 
+    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h] } in
+  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  container_grid
 
 let uni_sqr_with_size x y w row_ct col_ct = uni_with_size x y w w row_ct col_ct
 let reg_sqr_with_size x y w rc_ct = uni_sqr_with_size x y w rc_ct rc_ct
