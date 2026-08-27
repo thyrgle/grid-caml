@@ -16,8 +16,8 @@ let zero_cell =
 
 type grid =
 {
-  children: grid array array;
-  parent: grid option;
+  mutable children: grid array array;
+  mutable parent: grid option;
   mutable transforms: (cell -> cell) list;
   mutable children_transforms: (cell -> cell) list;
 }
@@ -32,6 +32,13 @@ let empty_grid =
 
 let compose (funs: ('a -> 'a) list): ('a -> 'a) =
   List.fold_left Fun.compose Fun.id funs
+
+let rec iter (f: grid -> unit) (g: grid): unit =
+  if (g.children = [|[||]|]) 
+  then (f g)
+  else (Array.iter (fun row ->
+    Array.iter (fun col -> iter f col) row) g.children
+  )
 
 let set_x (new_x: float) = (fun c -> { c with x=new_x })
 let set_y (new_y: float) = (fun c -> { c with y=new_y })
@@ -51,8 +58,8 @@ let pb (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let py (pad: float) = Fun.compose (pt pad) (pb pad)
 let p (pad: float) = compose [(pl pad); (pr pad); (pt pad); (pb pad)]
 
-let make_cell (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
-  { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; }
+let make_cell ?(parent=None) (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
+  { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; parent=parent; }
 
 let ( *$ ) (a: float) (b: int) = a *. Int.to_float b
 let ( $* ) (a: int) (b: float) = Int.to_float a *. b
@@ -70,12 +77,10 @@ let make_grid x y w h (row_weights: float array) (col_weights: float array): gri
   let children = Array.init_matrix dimx dimy (fun r c ->
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c))
       (w *. row_weights.(r)) (h *. col_weights.(c))) in
-    {
-      parent=None;
-      children=children;
-      transforms=[];
-      children_transforms=[];
-    }
+  let container_grid = 
+    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
+  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  container_grid
 
 let uni_with_cell_dim
   (x: float) (y: float)
@@ -88,12 +93,10 @@ let uni_with_cell_dim
     (fun r c -> (x +. (r $* cw), y +. (c $* ch))) in
   let children = Array.init_matrix row_ct col_ct (fun r c ->
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c)) cw ch) in
-  {
-    parent=None;
-    children=children;
-    transforms=[set_x x; set_y y; set_w w; set_h h];
-    children_transforms=[];
-  }
+  let container_grid = 
+    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
+  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  container_grid
 
 let uni_sqr_with_cell_dim x y cw row_ct col_ct = uni_with_cell_dim x y cw cw row_ct col_ct
 let reg_sqr_with_cell_dim x y cw rc_ct = uni_sqr_with_cell_dim x y cw rc_ct rc_ct
@@ -120,13 +123,6 @@ let uni_with_size
 
 let uni_sqr_with_size x y w row_ct col_ct = uni_with_size x y w w row_ct col_ct
 let reg_sqr_with_size x y w rc_ct = uni_sqr_with_size x y w rc_ct rc_ct
-
-let rec iter (f: grid -> unit) (g: grid): unit =
-  if (g.children = [|[||]|]) 
-  then (f g)
-  else (Array.iter (fun row ->
-    Array.iter (fun col -> iter f col) row) g.children
-  )
 
 let int_coords (g: grid) =
   let f = compose g.transforms in

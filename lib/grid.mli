@@ -1,6 +1,6 @@
 type grid
 
-val make_cell : float -> float -> float -> float -> grid
+val make_cell : ?parent:(grid option) -> float -> float -> float -> float -> grid
 val uni_with_cell_dim : float -> float -> float -> float -> int -> int -> grid
 val uni_sqr_with_cell_dim : float -> float -> float -> int -> int -> grid
 val uni_with_size : float -> float -> float -> float -> int -> int -> grid
