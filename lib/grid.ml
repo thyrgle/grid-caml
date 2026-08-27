@@ -30,6 +30,9 @@ let empty_grid =
   children_transforms=[];
 }
 
+let compose (funs: ('a -> 'a) list): ('a -> 'a) =
+  List.fold_left Fun.compose Fun.id funs
+
 let set_x (new_x: float) = (fun c -> { c with x=new_x })
 let set_y (new_y: float) = (fun c -> { c with y=new_y })
 let set_w (new_w: float) = (fun c -> { c with w=new_w })
@@ -46,6 +49,7 @@ let px (pad: float) = Fun.compose (pl pad) (pr pad)
 let pt (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let pb (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let py (pad: float) = Fun.compose (pt pad) (pb pad)
+let p (pad: float) = compose [(pl pad); (pr pad); (pt pad); (pb pad)]
 
 let make_cell (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
   { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; }
@@ -123,9 +127,6 @@ let rec iter (f: grid -> unit) (g: grid): unit =
   else (Array.iter (fun row ->
     Array.iter (fun col -> iter f col) row) g.children
   )
-
-let compose (funs: ('a -> 'a) list): ('a -> 'a) =
-  List.fold_left Fun.compose Fun.id funs
 
 let int_coords (g: grid) =
   let f = compose g.transforms in
