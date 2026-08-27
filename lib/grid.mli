@@ -1,5 +1,3 @@
-type transform_queue
-
 type grid =
 {
   x: float;
@@ -7,8 +5,8 @@ type grid =
   w: float;
   h: float;
   children: grid array array;
-  transforms: transform_queue;
-  children_transforms: transform_queue;
+  mutable transforms: (grid -> grid) list;
+  mutable children_transforms: (grid -> grid) list;
 }
 
 val make_cell : float -> float -> float -> float -> grid
