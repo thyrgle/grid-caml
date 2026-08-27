@@ -22,6 +22,6 @@
  (depends
    (ocaml (>= "5.4.0" )))
  (tags
-  ("add topics" "to describe" your project)))
+  ("layout" "grid" "ui" "games")))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

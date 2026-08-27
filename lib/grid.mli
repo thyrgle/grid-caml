@@ -1,6 +1,6 @@
 (** Description *)
 
-(** {1 The Fundamental Type: [grid] *)
+(** {1 The Fundamental Type: [grid] } *)
 
 (** A type that is used to "represent" a grid. In particular, you can construct a grid and then extract real-
     world coordinates from the grid and use them in an application. *)
