@@ -14,12 +14,14 @@ let zero_cell =
   h=0.0;
 }
 
+type transformation = (cell -> cell)
+
 type grid =
 {
   mutable children: grid array array;
   mutable parent: grid option;
-  mutable transforms: (cell -> cell) list;
-  mutable children_transforms: (cell -> cell) list;
+  mutable transforms: transformation list;
+  mutable children_transforms: transformation list;
 }
 
 let empty_grid =
@@ -56,7 +58,7 @@ let px (pad: float) = Fun.compose (pl pad) (pr pad)
 let pt (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let pb (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let py (pad: float) = Fun.compose (pt pad) (pb pad)
-let p (pad: float) = compose [(pl pad); (pr pad); (pt pad); (pb pad)]
+let p (pad: float) = Fun.compose (px pad) (py pad)
 
 let make_cell ?(parent=None) (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
   { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; parent=parent; }
@@ -119,6 +121,13 @@ let uni_with_size x y w h row_ct col_ct: grid =
 let uni_sqr_with_size x y w row_ct col_ct = uni_with_size x y w w row_ct col_ct
 let reg_sqr_with_size x y w rc_ct = uni_sqr_with_size x y w rc_ct rc_ct
 
+let apply_transform (transform: transformation) (g: grid) = g.transforms <- transform :: g.transforms
+let (+>) = apply_transform
+
+let apply_children_transform (transform: cell -> cell) (g: grid) = 
+  g.children_transforms <- transform :: g.children_transforms
+let (++>) = apply_children_transform
+
 let int_coords (g: grid) =
   let f = compose g.transforms in
   let i = Int.of_float in
@@ -133,10 +142,3 @@ let coords (g: grid) =
   let f = compose g.transforms in
   let fg = h @@ f zero_cell in
   (fg.x, fg.y, fg.w, fg.h)
-
-let apply_transform (transform: cell -> cell) (g: grid) = g.transforms <- transform :: g.transforms
-let (+>) = apply_transform
-
-let apply_children_transform (transform: cell -> cell) (g: grid) = 
-  g.children_transforms <- transform :: g.children_transforms
-let (++>) = apply_children_transform
