@@ -35,6 +35,18 @@ let set_y (new_y: float) = (fun c -> { c with y=new_y })
 let set_w (new_w: float) = (fun c -> { c with w=new_w })
 let set_h (new_h: float) = (fun c -> { c with h=new_h })
 
+let tx (by: float) = (fun c -> { c with x=c.x +. by })
+let ty (by: float) = (fun c -> { c with x=c.y +. by })
+let tw (by: float) = (fun c -> { c with x=c.w +. by })
+let th (by: float) = (fun c -> { c with x=c.h +. by })
+
+let pl (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
+let pr (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
+let px (pad: float) = Fun.compose (pl pad) (pr pad)
+let pt (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
+let pb (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
+let py (pad: float) = Fun.compose (pt pad) (pb pad)
+
 let make_cell (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
   { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; }
 
@@ -121,9 +133,13 @@ let int_coords (g: grid) =
   let fg = f zero_cell in
   (i fg.x, i fg.y, i fg.w, i fg.h)
 
-let coords (g: grid) = 
+let coords (g: grid) =
+  let h = 
+    (match g.parent with
+    | Some p -> compose p.children_transforms
+    | None -> Fun.id) in
   let f = compose g.transforms in
-  let fg = f zero_cell in
+  let fg = h @@ f zero_cell in
   (fg.x, fg.y, fg.w, fg.h)
 
 let apply_transform (transform: cell -> cell) (g: grid) = g.transforms <- transform :: g.transforms
