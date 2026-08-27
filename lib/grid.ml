@@ -95,15 +95,19 @@ let rec iter (f: grid -> unit) (g: grid): unit =
     Array.iter (fun col -> iter f col) row) g.children
   )
 
-let int_coords (g: grid) =
-(
-  Int.of_float g.x,
-  Int.of_float g.y,
-  Int.of_float g.w,
-  Int.of_float g.h
-)
+let compose (funs: ('a -> 'a) list): ('a -> 'a) =
+  List.fold_left Fun.compose Fun.id funs
 
-let coords (g: grid) = (g.x, g.y, g.w, g.h)
+let int_coords (g: grid) =
+  let f = compose g.transforms in
+  let i = Int.of_float in
+  let fg = f g in
+  (i fg.x, i fg.y, i fg.w, i fg.h)
+
+let coords (g: grid) = 
+  let f = compose g.transforms in
+  let fg = f g in
+  (fg.x, fg.y, fg.w, fg.h)
 
 let apply_transform (transform: grid -> grid) (g: grid) = g.transforms <- transform :: g.transforms
 let (+>) = apply_transform
