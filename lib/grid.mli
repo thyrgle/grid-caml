@@ -31,10 +31,10 @@ val uni_with_size : float -> float -> float -> float -> int -> int -> grid
 val uni_sqr_with_size : float -> float -> float -> int -> int -> grid
 
 (** Extract the float coordinates from a specified grid. *)
-val coords : grid -> float * float * float * float
+val coords : grid -> (float * float * float * float) option
 
 (** Extract the int coordinates from a specified grid. *)
-val int_coords : grid -> int * int * int * int
+val int_coords : (grid -> int * int * int * int)
 
 (** {1 Grid transformations} *)
 

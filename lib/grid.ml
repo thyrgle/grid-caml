@@ -1,34 +1,38 @@
 type cell =
 {
-  x: float;
-  y: float;
-  w: float;
-  h: float;
+  x: float; ix: float;
+  y: float; iy: float;
+  w: float; iw: float;
+  h: float; ih: float;
 }
 
 let zero_cell =
 {
-  x=0.0;
-  y=0.0;
-  w=0.0;
-  h=0.0;
+  x=0.0; ix=0.0;
+  y=0.0; iy=0.0;
+  w=0.0; iw=0.0;
+  h=0.0; ih=0.0;
 }
 
 type transformation = (cell -> cell)
 
 type grid =
 {
+  mutable cell: cell option;
   mutable children: grid array array;
   mutable parent: grid option;
   mutable transforms: transformation list;
+  mutable itransforms: transformation list;
   mutable children_transforms: transformation list;
 }
 
-let empty_grid =
+let default_grid =
 {
-  parent = None;
-  children = [|[||]|];
+  cell=None;
+  children=[|[||]|];
+  parent=None;
   transforms=[];
+  itransforms=[];
   children_transforms=[];
 }
 
@@ -61,7 +65,7 @@ let py (pad: float) = Fun.compose (pt pad) (pb pad)
 let p (pad: float) = Fun.compose (px pad) (py pad)
 
 let make_cell ?(parent=None) (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
-  { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; parent=parent; }
+  { default_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; parent=parent; }
 
 let ( *$ ) (a: float) (b: int) = a *. Int.to_float b
 let ( $* ) (a: int) (b: float) = Int.to_float a *. b
@@ -79,9 +83,9 @@ let make_grid x y w h (row_weights: float array) (col_weights: float array): gri
   let children = Array.init_matrix dimx dimy (fun r c ->
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c))
       (w *. row_weights.(r)) (h *. col_weights.(c))) in
-  let container_grid = 
-    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
-  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  let container_grid =
+    { default_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
+  iter (fun child -> child.parent <- Some container_grid) container_grid;
   container_grid
 
 let uni_with_cell_dim
@@ -96,7 +100,7 @@ let uni_with_cell_dim
   let children = Array.init_matrix row_ct col_ct (fun r c ->
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c)) cw ch) in
   let container_grid = 
-    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
+    { default_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
   iter (fun child -> child.parent <- Some(container_grid)) container_grid;
   container_grid
 
@@ -114,7 +118,7 @@ let uni_with_size x y w h row_ct col_ct: grid =
   let children = Array.init_matrix row_ct col_ct (fun x y ->
     make_cell (fst cell_coord.(x).(y)) (snd cell_coord.(x).(y)) cw ch) in
   let container_grid = 
-    { empty_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h] } in
+    { default_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h] } in
   iter (fun child -> child.parent <- Some(container_grid)) container_grid;
   container_grid
 
@@ -128,17 +132,32 @@ let apply_children_transform (transform: cell -> cell) (g: grid) =
   g.children_transforms <- transform :: g.children_transforms
 let (++>) = apply_children_transform
 
-let int_coords (g: grid) =
+let rec update (g: grid): unit =
+  match g.parent with
+  | None -> ()
+  | Some(p) -> update p;
   let f = compose g.transforms in
-  let i = Int.of_float in
-  let fg = f zero_cell in
-  (i fg.x, i fg.y, i fg.w, i fg.h)
+  let fcell = f zero_cell in
+  g.cell <- Some fcell
 
-let coords (g: grid) =
-  let h = 
-    (match g.parent with
-    | Some p -> compose p.children_transforms
-    | None -> Fun.id) in
-  let f = compose g.transforms in
-  let fg = h @@ f zero_cell in
-  (fg.x, fg.y, fg.w, fg.h)
+let rec compute (g: grid): unit =
+  match g.parent with
+  | None -> ()
+  | Some p -> compute p;
+  match g.cell with
+  | None -> (
+      let f = compose g.transforms in
+      let fcell = f zero_cell in
+      g.cell <- Some fcell
+    )
+  | Some _ -> ()
+  
+let coords (g: grid): (float * float * float * float) option =
+  match g.cell with
+  | None -> None
+  | Some c -> Some (c.x, c.y, c.w, c.h)
+
+let int_coords (g: grid): (int * int * int * int) option =
+  match coords g with
+  | None -> None
+  | Some (x, y, w, h) -> Some (Int.of_float x, Int.of_float y, Int.of_float w, Int.of_float h)
