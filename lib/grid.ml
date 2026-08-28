@@ -157,7 +157,9 @@ let coords (g: grid): (float * float * float * float) option =
   | None -> None
   | Some c -> Some (c.x, c.y, c.w, c.h)
 
+
 let int_coords (g: grid): (int * int * int * int) option =
+  let itof = Int.of_float in
   match coords g with
   | None -> None
-  | Some (x, y, w, h) -> Some (Int.of_float x, Int.of_float y, Int.of_float w, Int.of_float h)
+  | Some (x, y, w, h) -> Some (itof x, itof y, itof w, itof h)
