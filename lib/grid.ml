@@ -101,7 +101,7 @@ let uni_with_cell_dim
     make_cell (fst cell_coord.(r).(c)) (snd cell_coord.(r).(c)) cw ch) in
   let container_grid = 
     { default_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h]} in
-  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  iter (fun child -> child.parent <- Some container_grid) container_grid;
   container_grid
 
 let uni_sqr_with_cell_dim x y cw row_ct col_ct = uni_with_cell_dim x y cw cw row_ct col_ct
@@ -119,7 +119,7 @@ let uni_with_size x y w h row_ct col_ct: grid =
     make_cell (fst cell_coord.(x).(y)) (snd cell_coord.(x).(y)) cw ch) in
   let container_grid = 
     { default_grid with children=children; transforms=[set_x x; set_y y; set_w w; set_h h] } in
-  iter (fun child -> child.parent <- Some(container_grid)) container_grid;
+  iter (fun child -> child.parent <- Some container_grid) container_grid;
   container_grid
 
 let uni_sqr_with_size x y w row_ct col_ct = uni_with_size x y w w row_ct col_ct
