@@ -34,7 +34,7 @@ val uni_sqr_with_size : float -> float -> float -> int -> int -> grid
 val coords : grid -> (float * float * float * float) option
 
 (** Extract the int coordinates from a specified grid. *)
-val int_coords : (grid -> int * int * int * int)
+val int_coords : grid -> (int * int * int * int) option
 
 (** {1 Grid transformations} *)
 
@@ -104,3 +104,11 @@ val py : float -> transformation
 
 (** Apply padding to all sides of grid. *)
 val p : float -> transformation
+
+(** {1 Evaluating the [grid] } *)
+
+(** Computes all values for a [grid] and the children. *)
+val compute : grid -> unit
+
+(** Compute values for that [grid] (and also for the parents. *)
+val compute_grid : grid -> unit

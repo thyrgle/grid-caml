@@ -135,15 +135,15 @@ let (++>) = apply_children_transform
 let rec update (g: grid): unit =
   match g.parent with
   | None -> ()
-  | Some(p) -> update p;
+  | Some p -> update p;
   let f = compose g.transforms in
   let fcell = f zero_cell in
   g.cell <- Some fcell
 
-let rec compute (g: grid): unit =
+let rec compute_grid (g: grid): unit =
   match g.parent with
   | None -> ()
-  | Some p -> compute p;
+  | Some p -> compute_grid p;
   match g.cell with
   | None -> (
       let f = compose g.transforms in
@@ -151,6 +151,8 @@ let rec compute (g: grid): unit =
       g.cell <- Some fcell
     )
   | Some _ -> ()
+
+let rec compute (g: grid): unit = iter compute_grid g
   
 let coords (g: grid): (float * float * float * float) option =
   match g.cell with
