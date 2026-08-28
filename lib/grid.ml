@@ -2,10 +2,6 @@ type cell =
 {
   x: float;
   y: float;
-  il: float;
-  ir: float;
-  it: float;
-  ib: float;
   w: float;
   h: float;
 }
@@ -14,10 +10,6 @@ let zero_cell =
 {
   x=0.0;
   y=0.0;
-  il=0.0;
-  ir=0.0;
-  it=0.0;
-  ib=0.0;
   w=0.0;
   h=0.0;
 }
@@ -67,14 +59,6 @@ let pt (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let pb (pad: float) = (fun c -> { c with x=c.x +. pad; h=c.h -. pad })
 let py (pad: float) = Fun.compose (pt pad) (pb pad)
 let p (pad: float) = Fun.compose (px pad) (py pad)
-
-let ml (mar: float) = (fun c -> { c with il=c.il +. mar })
-let mr (mar: float) = (fun c -> { c with ir=c.ir +. mar })
-let mx (mar: float) = Fun.compose (ml mar) (mr mar)
-let mt (mar: float) = (fun c -> { c with it=c.it +. mar })
-let mb (mar: float) = (fun c -> { c with ib=c.ib +. mar })
-let my (mar: float) = Fun.compose (mt mar) (mb mar)
-let m (mar: float) = Fun.compose (mx mar) (my mar)
 
 let make_cell ?(parent=None) (x: 'float) (y: 'float) (w: 'float) (h: 'float): grid =
   { empty_grid with transforms=[set_x x; set_y y; set_w w; set_h h]; parent=parent; }
